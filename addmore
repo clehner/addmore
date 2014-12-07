@@ -11,8 +11,6 @@ if [ $# -lt 1 ]; then
 	exit 0
 fi
 
-PROG="$(basename $0)"
-
 if [ "$1" = '-r' ] ; then
 	reference="$2"
 	shift; shift
@@ -26,7 +24,7 @@ else
 	)
 fi
 if [ ! -s "$reference" ]; then
-	echo "$PROG: unable to read reference file $reference" 1>&2
+	echo "$(basename $0): unable to read reference file $reference" 1>&2
 	exit 1
 fi
 
