@@ -1,0 +1,67 @@
+#!/bin/sh
+#/ Usage: addmore [-r <reference>] <target> [...]
+#/ Create new C source and header file in the current directory
+#/
+#/ addmore reads a C comment from the beginning <reference> or finds one in the
+#/ current directory. addmore creates a new C source file <target>.c and header
+#/ file <target>.h for each <target>. It puts the reference comment at the top.
+
+if [ $# -lt 1 ]; then
+	grep '^#/' <"$0" | cut -c4-
+	exit 0
+fi
+
+PROG="$(basename $0)"
+
+if [ "$1" = '-r' ] ; then
+	reference="$2"
+	shift; shift
+else
+	# Find the reference file in the directory
+	reference=$(
+		if git rev-parse 2>/dev/null
+		then git ls-files '*.c' '*.h'
+		else ls *.h *.c
+		fi | sort -R | head -1
+	)
+fi
+if [ ! -s "$reference" ]; then
+	echo "$PROG: unable to read reference file $reference" 1>&2
+	exit 1
+fi
+
+# Add top comment to each file
+comment_file=
+for target; do
+	if [ -z $comment_file ]; then
+		# Get the top comment from the reference file
+		sed -n '
+			:b /\/\*/ba; /^\/\//!q; p; n; bb;
+			:a p; n; /\*\//{p; n; bb}; ba
+		' <"$reference" >"$target.h"
+		comment_file="$target.h"
+	else
+		cat "$comment_file" > "$target.h"
+	fi
+	cat "$comment_file" > "$target.c"
+done
+
+for target; do
+	# Add stuff to source file
+	cat >> "$target.c" << EOF
+
+#include "${target}.h"
+
+EOF
+
+	# Add comments to header file
+	NAME=$(echo "$target" | tr a-z A-Z)
+	cat >>"$target.h" << EOF
+
+#ifndef __${NAME}_H
+#define __${NAME}_H
+
+
+#endif /* __${NAME}_H */
+EOF
+done
