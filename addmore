@@ -60,7 +60,6 @@ EOF
 #ifndef __${NAME}_H
 #define __${NAME}_H
 
-
 #endif /* __${NAME}_H */
 EOF
 done
