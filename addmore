@@ -46,14 +46,15 @@ done
 
 for target; do
 	# Add stuff to source file
+	include=$(basename "$target")
 	cat >> "$target.c" << EOF
 
-#include "${target}.h"
+#include "${include}.h"
 
 EOF
 
 	# Add comments to header file
-	NAME=$(echo "$target" | tr a-z A-Z)
+	NAME=$(basename "$target" | tr a-z A-Z)
 	cat >>"$target.h" << EOF
 
 #ifndef __${NAME}_H
